@@ -213,7 +213,19 @@ public static class VContainerExtensions
 
     static void RegisterVitalRouterDisposable(this IContainerBuilder builder, RoutingBuilder routing)
     {
-        builder.Register(container => new RoutingDisposable(container, routing.MapRoutesInfos), Lifetime.Scoped);
+        //not working
+        //builder.Register(container => new RoutingDisposable(container, routing.MapRoutesInfos), Lifetime.Scoped);
+        
+        //If there are several lifetimeScopes in the project and we, for example, unload only the "UI scope". The callback will be called for all scopes.
+        var origin = builder.ApplicationOrigin;
+        builder.RegisterDisposeCallback(container =>
+        {
+            //To get around this, I look at ApplicationOrigin and compare it with what is in the "builder" and what is unloaded.
+            if(container.ApplicationOrigin != origin)
+                return;
+            var dispose = new RoutingDisposable(container, routing.MapRoutesInfos);
+            dispose.Dispose();
+        });
     }
 
     static void InvokeMapRoutes(Router router, RoutingBuilder routing, IObjectResolver container)
