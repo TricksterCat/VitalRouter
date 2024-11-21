@@ -123,6 +123,18 @@ namespace VitalRouter.Internal
             }
         }
 
+        public void AddAwaiter(ValueTask valueTask)
+        {
+            if (valueTask is { IsCompleted: true, IsFaulted: false })
+            {
+                IncrementSuccessfully();
+            }
+            else
+            {
+                AwaiterNode.RegisterUnsafeOnCompleted(this, valueTask.GetAwaiter());
+            }
+        }
+
         public ValueTaskSourceStatus GetStatus(short token)
         {
             if (completedCount == taskCount)
